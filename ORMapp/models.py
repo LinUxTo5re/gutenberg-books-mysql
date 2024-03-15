@@ -1,6 +1,6 @@
 from django.db import models
 
-
+# Models of existing db
 class BooksAuthor(models.Model):
     id = models.IntegerField(primary_key=True)
     birth_year = models.SmallIntegerField(blank=True, null=True)
