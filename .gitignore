@@ -1,3 +1,4 @@
 venv/
 ORMapp/__pycache__/
-gutenberProject/__pycache__/
+gutenbergProject/__pycache__/
+ORMapp/migrations/__pycache__/
