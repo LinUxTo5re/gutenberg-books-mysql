@@ -7,7 +7,6 @@ class BooksAuthorSerializer(serializers.ModelSerializer):
         fields = ['id', 'birth_year','death_year','name']
 
 class BooksBookSerializer(serializers.ModelSerializer):
-    # booksauthor = BooksAuthorSerializer()  
     class Meta:
         model = BooksBook
         fields = ['id', 'download_count', 'gutenberg_id', 'media_type', 'title']
