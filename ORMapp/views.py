@@ -1,121 +1,58 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.pagination import PageNumberPagination
-from .models import *
-from .serializer import *
+from django.db.models import Q
+from django.http import JsonResponse
+from .models import BooksLanguage, BooksBook, BooksSubject, BooksBookshelf, BooksAuthor
+
+def GutenbergDataListView(request):
+    book_ids = [int(id) for id in request.GET.getlist('id', [])]
+    languages = request.GET.getlist('language', None)
+    mimetypes = request.GET.getlist('mimetype', None)
+    subjects = request.GET.getlist('subjects', None)
+    bookshelves = [int(shelf) for shelf in request.GET.getlist('bookshelf', [])]
+    authors = request.GET.getlist('author', None)
+    titles = request.GET.getlist('title', None)
+
+    books_queryset = BooksBook.objects.all()
+
+    if book_ids:
+        books_queryset = books_queryset.filter(gutenberg_id__in=book_ids)
+    if languages:
+        language_ids = list(BooksLanguage.objects.filter(code__in=languages).values_list('id', flat=True))
+        if language_ids:
+            books_queryset = books_queryset.filter(booksbooklanguages__language_id__in=language_ids)
+    if mimetypes:
+        books_queryset = books_queryset.filter(booksformat__mime_type__in=mimetypes)
+    if subjects:
+        subject_ids = []
+        for subject in subjects:
+            subject_ids.extend(BooksSubject.objects.filter(name__icontains=subject).values_list('id', flat=True))
+        if subject_ids:
+            books_queryset = books_queryset.filter(booksbooksubjects__subject_id__in=subject_ids)
+    if bookshelves:
+        books_queryset = books_queryset.filter(booksbookbookshelves__bookshelf_id__in=bookshelves)
+    if authors:
+        author_ids = []
+        for author in authors:
+            author_ids.extend(BooksAuthor.objects.filter(name__icontains=author).values_list('id', flat=True))
+        if author_ids:
+            books_queryset = books_queryset.filter(booksbookauthors__author_id__in=author_ids)
+    if titles:
+        title_query = Q()
+        for title in titles:
+            title_query |= Q(title__icontains=title)
+        books_queryset = books_queryset.filter(title_query)
 
 
-class CustomPagination(PageNumberPagination):
-    page_size = 20
-    page_size_query_param = 'page_size'
-    max_page_size = 100
+    books_data = []
+    for book in books_queryset:
+        book_info = {
+            'title': book.title,
+            'author': book.authors.all().values_list('name', flat=True),
+            'genre': book.media_type,
+            'languages': book.bookslanguages.all().values_list('code', flat=True),
+            'subjects': book.bookssubjects.all().values_list('name',flat= True),
+            'bookshelves': book.booksshelves.all().values_list('id', flat=True),
+            'download_links': book.booksformats.all().values_list('url', flat=True)
+        }
+        books_data.append(book_info)
 
-
-class BooksAuthorListView(APIView):
-    def get(self, request):
-        queryset = BooksAuthor.objects.all()
-        paginator = CustomPagination()
-        result_page = paginator.paginate_queryset(queryset, request)
-        serializer = BooksAuthorSerializer(result_page, many=True)
-        response = paginator.get_paginated_response(serializer.data)
-        response.data['count'] = queryset.count()  
-        return response
-
-
-class BooksBookListView(APIView):
-    def get(self, request):
-        queryset = BooksBook.objects.order_by('-download_count')
-        paginator = CustomPagination()
-        result_page = paginator.paginate_queryset(queryset, request)
-        serializer = BooksBookSerializer(result_page, many=True)
-        response = paginator.get_paginated_response(serializer.data)
-        response.data['count'] = queryset.count()  
-        return response
-
-
-class BooksBookAuthorsListView(APIView):
-    def get(self, request):
-        queryset = BooksBookAuthors.objects.all()
-        paginator = CustomPagination()
-        result_page = paginator.paginate_queryset(queryset, request)
-        serializer = BooksBookAuthorsSerializer(result_page, many=True)
-        response = paginator.get_paginated_response(serializer.data)
-        response.data['count'] = queryset.count()  
-        return response
-
-
-class BooksBookBookshelvesListView(APIView):
-    def get(self, request):
-        queryset = BooksBookBookshelves.objects.all()
-        paginator = CustomPagination()
-        result_page = paginator.paginate_queryset(queryset, request)
-        serializer = BooksBookBookshelvesSerializer(result_page, many=True)
-        response = paginator.get_paginated_response(serializer.data)
-        response.data['count'] = queryset.count()  
-        return response
-
-
-class BooksBookLanguagesListView(APIView):
-    def get(self, request):
-        queryset = BooksBookLanguages.objects.all()
-        paginator = CustomPagination()
-        result_page = paginator.paginate_queryset(queryset, request)
-        serializer = BooksBookLanguagesSerializer(result_page, many=True)
-        response = paginator.get_paginated_response(serializer.data)
-        response.data['count'] = queryset.count() 
-        return response
-
-
-class BooksBookSubjectsListView(APIView):
-    def get(self, request):
-        queryset = BooksBookSubjects.objects.all()
-        paginator = CustomPagination()
-        result_page = paginator.paginate_queryset(queryset, request)
-        serializer = BooksBookSubjectsSerializer(result_page, many=True)
-        response = paginator.get_paginated_response(serializer.data)
-        response.data['count'] = queryset.count() 
-        return response
-
-
-class BooksBookshelfListView(APIView):
-    def get(self, request):
-        queryset = BooksBookshelf.objects.all()
-        paginator = CustomPagination()
-        result_page = paginator.paginate_queryset(queryset, request)
-        serializer = BooksBookshelfSerializer(result_page, many=True)
-        response = paginator.get_paginated_response(serializer.data)
-        response.data['count'] = queryset.count() 
-        return response
-
-
-class BooksFormatListView(APIView):
-    def get(self, request):
-        queryset = BooksFormat.objects.all()
-        paginator = CustomPagination()
-        result_page = paginator.paginate_queryset(queryset, request)
-        serializer = BooksFormatSerializer(result_page, many=True)
-        response = paginator.get_paginated_response(serializer.data)
-        response.data['count'] = queryset.count() 
-        return response
-
-
-class BooksLanguageListView(APIView):
-    def get(self, request):
-        queryset = BooksLanguage.objects.all()
-        paginator = CustomPagination()
-        result_page = paginator.paginate_queryset(queryset, request)
-        serializer = BooksLanguageSerializer(result_page, many=True)
-        response = paginator.get_paginated_response(serializer.data)
-        response.data['count'] = queryset.count()  
-        return response
-
-
-class BooksSubjectListView(APIView):
-    def get(self, request):
-        queryset = BooksSubject.objects.all()
-        paginator = CustomPagination()
-        result_page = paginator.paginate_queryset(queryset, request)
-        serializer = BooksSubjectSerializer(result_page, many=True)
-        response = paginator.get_paginated_response(serializer.data)
-        response.data['count'] = queryset.count() 
-        return response
+    return JsonResponse({'total_books_count': len(books_data), 'books': books_data})

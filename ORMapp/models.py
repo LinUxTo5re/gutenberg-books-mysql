@@ -1,6 +1,6 @@
 from django.db import models
 
-# Models of existing db
+
 class BooksAuthor(models.Model):
     id = models.IntegerField(primary_key=True)
     birth_year = models.SmallIntegerField(blank=True, null=True)
@@ -18,7 +18,11 @@ class BooksBook(models.Model):
     gutenberg_id = models.IntegerField()
     media_type = models.CharField(max_length=16)
     title = models.TextField(blank=True, null=True)
-
+    authors = models.ManyToManyField('BooksAuthor', through='BooksBookAuthors')
+    booksshelves = models.ManyToManyField('BooksBookshelf', through='BooksBookBookshelves')
+    booksformats = models.ManyToManyField('BooksFormat', related_name='books', blank=True)
+    bookslanguages = models.ManyToManyField('BooksLanguage', through='BooksBookLanguages')
+    bookssubjects = models.ManyToManyField('BooksSubject', through='BooksBookSubjects')
     class Meta:
         managed = False
         db_table = 'books_book'
@@ -26,18 +30,17 @@ class BooksBook(models.Model):
 
 class BooksBookAuthors(models.Model):
     id = models.IntegerField(primary_key=True)
-    book_id = models.IntegerField()
-    author_id = models.IntegerField()
+    book = models.ForeignKey('BooksBook', on_delete=models.CASCADE)
+    author = models.ForeignKey('BooksAuthor', on_delete=models.CASCADE)
 
     class Meta:
         managed = False
         db_table = 'books_book_authors'
 
-
 class BooksBookBookshelves(models.Model):
     id = models.IntegerField(primary_key=True)
-    book_id = models.IntegerField()
-    bookshelf_id = models.IntegerField()
+    book = models.ForeignKey(BooksBook, on_delete=models.CASCADE)
+    bookshelf = models.ForeignKey('BooksBookshelf', on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -46,8 +49,8 @@ class BooksBookBookshelves(models.Model):
 
 class BooksBookLanguages(models.Model):
     id = models.IntegerField(primary_key=True)
-    book_id = models.IntegerField()
-    language_id = models.IntegerField()
+    book = models.ForeignKey(BooksBook, on_delete=models.CASCADE)
+    language = models.ForeignKey('BooksLanguage', on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -56,8 +59,8 @@ class BooksBookLanguages(models.Model):
 
 class BooksBookSubjects(models.Model):
     id = models.IntegerField(primary_key=True)
-    book_id = models.IntegerField()
-    subject_id = models.IntegerField()
+    book = models.ForeignKey(BooksBook, on_delete=models.CASCADE)
+    subject = models.ForeignKey('BooksSubject', on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -77,7 +80,7 @@ class BooksFormat(models.Model):
     id = models.IntegerField(primary_key=True)
     mime_type = models.CharField(max_length=32)
     url = models.TextField()
-    book_id = models.IntegerField()
+    book = models.ForeignKey('BooksBook', on_delete=models.CASCADE)
 
     class Meta:
         managed = False
