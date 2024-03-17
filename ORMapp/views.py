@@ -1,7 +1,15 @@
 from django.core.paginator import Paginator
 from django.http import JsonResponse
 from .models import BooksLanguage, BooksBook, BooksSubject, BooksBookshelf, BooksAuthor
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework.decorators import api_view
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from drf_yasg import openapi
 
+
+    
+@api_view(['GET'])
 def GutenbergDataListView(request):
     book_ids = [int(id) for id in request.GET.getlist('id', [])]
     languages = request.GET.getlist('language', None)
@@ -59,7 +67,6 @@ def GutenbergDataListView(request):
             'languages': list(book.bookslanguages.all().values_list('code', flat=True)),
             'subjects': list(book.bookssubjects.all().values_list('name', flat=True)),
             'bookshelves': list(book.booksshelves.all().values_list('id', flat=True)),
-            # 'download_links': book.booksformats.all().values_list('url', flat=True)
         }
         books_data.append(book_info)
 
@@ -81,3 +88,19 @@ def GutenbergDataListView(request):
     }
 
     return JsonResponse(response_data)
+
+GutenbergDataListView = swagger_auto_schema(
+    method='GET',
+    responses={200: 'OK'},
+    manual_parameters=[
+        openapi.Parameter('id', openapi.IN_QUERY, description="gutenberg ID", type=openapi.TYPE_STRING, required=False, explode=True),
+        openapi.Parameter('language', openapi.IN_QUERY, description="langues code (eg: en, fr)", type=openapi.TYPE_STRING, required=False, explode=True),
+        openapi.Parameter('mimetype', openapi.IN_QUERY, description="mime type (eg: text/plain)", type=openapi.TYPE_STRING, required=False, explode=True),
+        openapi.Parameter('subjects', openapi.IN_QUERY, description="subjects", type=openapi.TYPE_STRING, required=False, explode=True),
+        openapi.Parameter('bookshelf', openapi.IN_QUERY, description="bookshelf ID", type=openapi.TYPE_STRING, required=False, explode=True),
+        openapi.Parameter('author', openapi.IN_QUERY, description="author name", type=openapi.TYPE_STRING, required=False, explode=True),
+        openapi.Parameter('title', openapi.IN_QUERY, description="book title", type=openapi.TYPE_STRING, required=False, explode=True),
+        openapi.Parameter('page', openapi.IN_QUERY, description="pagination", type=openapi.TYPE_STRING, required=False, explode=True),
+   
+    ]
+)(GutenbergDataListView)
