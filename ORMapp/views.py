@@ -10,12 +10,12 @@ from drf_yasg import openapi
 
 @api_view(['GET'])
 def GutenbergDataListView(request):
-    if len(request.GET.getlist('id')) == 1:
+    if len(request.GET.getlist('id')) == 1: # added block to handle swagger parameters values
         try:
             book_ids = [int(num) for num_str in request.GET.getlist('id') for num in num_str.split(',')]
         except:
             book_ids = [int(id) for id in request.GET.getlist('id', [])]
-    else:
+    else: # it'll handle normal api call
         book_ids = [int(id) for id in request.GET.getlist('id', [])]
 
     if len(request.GET.getlist('language')) == 1:
@@ -70,6 +70,7 @@ def GutenbergDataListView(request):
 
     books_queryset = BooksBook.objects.all()
 
+    # multi-level filtration of data
     if book_ids:
         books_queryset = books_queryset.filter(gutenberg_id__in=book_ids)
     if languages:
@@ -118,6 +119,7 @@ def GutenbergDataListView(request):
         }
         books_data.append(book_info)
 
+    # checking next page for data
     has_next_page = books_page.has_next()
 
     next_page_url = None
@@ -137,6 +139,7 @@ def GutenbergDataListView(request):
 
     return JsonResponse(response_data)
 
+# custom swagger schema for parameters
 GutenbergDataListView = swagger_auto_schema(
     method='GET',
     responses={200: 'OK'},
