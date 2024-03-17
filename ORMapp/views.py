@@ -8,16 +8,64 @@ from rest_framework.response import Response
 from drf_yasg import openapi
 
 
-    
 @api_view(['GET'])
 def GutenbergDataListView(request):
-    book_ids = [int(id) for id in request.GET.getlist('id', [])]
-    languages = request.GET.getlist('language', None)
-    mimetypes = request.GET.getlist('mimetype', None)
-    subjects = request.GET.getlist('subjects', None)
-    bookshelves = [int(shelf) for shelf in request.GET.getlist('bookshelf', [])]
-    authors = request.GET.getlist('author', None)
-    titles = request.GET.getlist('title', None)
+    if len(request.GET.getlist('id')) == 1:
+        try:
+            book_ids = [int(num) for num_str in request.GET.getlist('id') for num in num_str.split(',')]
+        except:
+            book_ids = [int(id) for id in request.GET.getlist('id', [])]
+    else:
+        book_ids = [int(id) for id in request.GET.getlist('id', [])]
+
+    if len(request.GET.getlist('language')) == 1:
+        try:
+            languages = [lang.strip() for item in request.GET.getlist('language') for lang in item.split(',')]
+        except:
+            languages = request.GET.getlist('language', None)
+    else:
+        languages = request.GET.getlist('language', None)
+    
+    if len(request.GET.getlist('mimetype')) == 1:
+        try:
+            mimetypes = [mt.strip() for item in request.GET.getlist('mimetype') for mt in item.split(',')]
+        except:
+            mimetypes = request.GET.getlist('mimetype', None)
+    else:
+        mimetypes = request.GET.getlist('mimetype', None)
+
+    if len(request.GET.getlist('subjects')) == 1:
+        try:
+            subjects = [sub.strip() for item in request.GET.getlist('subjects') for sub in item.split(',')]
+        except:
+            subjects = request.GET.getlist('subjects', None)
+    else:
+        subjects = request.GET.getlist('subjects', None)
+
+    if len(request.GET.getlist('bookshelf')) == 1:
+        try:
+            bookshelves = [int(bs) for item in request.GET.getlist('bookshelf') for bs in item.split(',')]
+        except:
+            bookshelves = [int(shelf) for shelf in request.GET.getlist('bookshelf', [])]
+    else:
+        bookshelves = [int(shelf) for shelf in request.GET.getlist('bookshelf', [])]
+
+    if len(request.GET.getlist('author')) == 1:
+        try:
+            authors = [auth.strip() for item in request.GET.getlist('author') for auth in item.split(',')]
+        except:
+            authors = request.GET.getlist('author', None)
+    else:
+        authors = request.GET.getlist('author', None)
+
+    if len(request.GET.getlist('title')) == 1:
+        try:
+            titles = [ti.strip() for item in request.GET.getlist('title') for ti in item.split(',')]
+        except:
+            titles = request.GET.getlist('title', None)
+    else:
+        titles = request.GET.getlist('title', None)
+
     page_number = int(request.GET.get('page', 1))
 
     books_queryset = BooksBook.objects.all()
@@ -93,7 +141,7 @@ GutenbergDataListView = swagger_auto_schema(
     method='GET',
     responses={200: 'OK'},
     manual_parameters=[
-        openapi.Parameter('id', openapi.IN_QUERY, description="gutenberg ID", type=openapi.TYPE_STRING, required=False, explode=True),
+        openapi.Parameter('id', openapi.IN_QUERY, description="gutenberg ID", type=openapi.TYPE_STRING,required=False, explode=True),
         openapi.Parameter('language', openapi.IN_QUERY, description="langues code (eg: en, fr)", type=openapi.TYPE_STRING, required=False, explode=True),
         openapi.Parameter('mimetype', openapi.IN_QUERY, description="mime type (eg: text/plain)", type=openapi.TYPE_STRING, required=False, explode=True),
         openapi.Parameter('subjects', openapi.IN_QUERY, description="subjects", type=openapi.TYPE_STRING, required=False, explode=True),
