@@ -2,3 +2,4 @@ venv/
 ORMapp/__pycache__/
 gutenbergProject/__pycache__/
 ORMapp/migrations/__pycache__/
+.vscode/
