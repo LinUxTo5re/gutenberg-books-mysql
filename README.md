@@ -27,5 +27,6 @@ Alternatively, you can manually hit the API endpoints by sending HTTP requests t
 ### Note - 
 - *Download_links are not added in json, having issue while extracting. will fix asap.*
 
-- ## Fixed: *some of swagger parameters are not working but you can check those manually hitting endpoint with querystring, will fix asap.*
+- ## Fixed:
+       *some of swagger parameters are not working but you can check those manually hitting endpoint with querystring, will fix asap.*
 
