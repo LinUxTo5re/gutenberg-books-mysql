@@ -1,6 +1,6 @@
 from django.core.paginator import Paginator
 from django.http import JsonResponse
-from .models import BooksLanguage, BooksBook, BooksSubject, BooksBookshelf, BooksAuthor
+from .models import *
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
 from rest_framework.views import APIView
@@ -109,6 +109,12 @@ def GutenbergDataListView(request):
 
     books_data = []
     for book in books_page:
+        download_links =[]
+        try:
+            books_formats = BooksFormat.objects.filter(book_id=book.gutenberg_id)
+            download_links = [book.url for book in books_formats]
+        except:
+            download_links = "Exception raised"
         book_info = {
             'title': book.title,
             'author': list(book.authors.all().values_list('name', flat=True)),
@@ -116,6 +122,7 @@ def GutenbergDataListView(request):
             'languages': list(book.bookslanguages.all().values_list('code', flat=True)),
             'subjects': list(book.bookssubjects.all().values_list('name', flat=True)),
             'bookshelves': list(book.booksshelves.all().values_list('id', flat=True)),
+            'download_links': download_links
         }
         books_data.append(book_info)
 
